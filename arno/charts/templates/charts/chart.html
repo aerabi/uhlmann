@@ -22,7 +22,7 @@
                 datasets: [
                 {% for data in datasets %}
                 {
-                    label: 'IRS',
+                    label: '{{ data.name }}',
                     data: [{{ data.data }}],
                     fill: false,
                     backgroundColor: '{{ data.color }}',
