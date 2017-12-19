@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Uhl-Chart</title>
+</head>
+<body>
+    <canvas id="Chart-IR" width="400" height="100"></canvas>
+    <canvas id="Chart-LNr" width="400" height="50"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js"></script>
+    <script>
+        var cIR = document.getElementById("Chart-IR").getContext('2d');
+        var chartIR = new Chart(cIR, {
+            type: 'line',
+            data: {
+                labels: [
+                    {% for label in labels %}
+                    '{{ label }}',
+                    {% endfor %}
+                ],
+                datasets: [
+                {% for data in datasets %}
+                {
+                    label: 'IRS',
+                    data: [{{ data.data }}],
+                    fill: false,
+                    backgroundColor: '{{ data.color }}',
+                    borderColor: '{{ data.color }}',
+                    borderWidth: 1
+                },
+                {% endfor %}
+                ],
+            },
+            options: {
+                spanGaps: true
+            }
+        });
+    </script>
+</body>
+</html>

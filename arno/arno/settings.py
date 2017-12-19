@@ -28,6 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '46.101.251.251',
     'server',
+    'localhost',
 ]
 
 
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'charts',
 ]
 
 MIDDLEWARE = [
