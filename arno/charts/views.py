@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import csv
 import os.path
 import json
 
@@ -18,6 +19,13 @@ def _cache_file_(filename):
     ftp.retrbinary('RETR ' + filename, localfile.write, 1024)
     ftp.quit()
     localfile.close()
+
+
+def _color_(name):
+    colors = {'solar': 'yellow', 'diesel': 'black', 'grid': 'red', 'consumption': 'green'}
+    if name in colors:
+        return colors[name]
+    return 'red'
 
 
 def _load_data_(filename, quarterly=False, multiplier=60):
@@ -92,6 +100,37 @@ def demo(request, solar_max=1000):
         'color': 'green'
     }
     datasets = [consumption_dataset, solar_dataset, difference_dataset]
+    context = {
+        'labels': labels,
+        'datasets': datasets,
+    }
+    return render(request, 'charts/chart.html', context)
+
+
+def _simple_csv_loader_(columns, solar_index, consumption_index, solar_max=15000):
+    datasets = [{'name': name, 'list': [], 'color': _color_(name)} for name in columns]
+    labels = []
+    with open('bernd.csv', newline='') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
+        for row in csv_reader:
+            adjusted_solar = float(row[solar_index]) * solar_max / 1000
+            for index in range(len(row)):
+                if index == 0:
+                    labels.append(row[index])
+                elif index == solar_index:
+                    datasets[index - 1]['list'].append(str(adjusted_solar))
+                elif index == consumption_index:
+                    adjusted_consumption = float(row[index]) - adjusted_solar
+                    datasets[index - 1]['list'].append(str(adjusted_consumption))
+                else:
+                    datasets[index - 1]['list'].append(row[index])
+    for i in range(len(datasets)):
+        datasets[i]['data'] = ', '.join(datasets[i]['list'])
+    return labels, datasets
+
+
+def csv_based_demo(request, solar_max=1000):
+    labels, datasets = _simple_csv_loader_(['solar', 'grid', 'consumption', 'diesel'], 1, 3, int(solar_max))
     context = {
         'labels': labels,
         'datasets': datasets,
