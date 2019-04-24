@@ -107,29 +107,39 @@ def demo(request, solar_max=1000):
     return render(request, 'charts/chart.html', context)
 
 
+def _str_(number):
+    if number == 0:
+        return ''
+    return str(number)
+
+
 def _simple_csv_loader_(columns, solar_index, consumption_index, solar_max=15000):
     datasets = [{'name': name, 'list': [], 'color': _color_(name)} for name in columns]
     labels = []
-    with open('bernd.csv', newline='') as csv_file:
+    with open('bernd.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
         for row in csv_reader:
             adjusted_solar = float(row[solar_index]) * solar_max / 1000
+            adjusted_consumption = float(row[consumption_index]) - adjusted_solar
             for index in range(len(row)):
+                cell = row[index].strip()
                 if index == 0:
-                    labels.append(row[index])
+                    labels.append(cell)
                 elif index == solar_index:
-                    datasets[index - 1]['list'].append(str(adjusted_solar))
+                    datasets[index - 1]['list'].append(_str_(adjusted_solar))
                 elif index == consumption_index:
-                    adjusted_consumption = float(row[index]) - adjusted_solar
-                    datasets[index - 1]['list'].append(str(adjusted_consumption))
+                    datasets[index - 1]['list'].append(_str_(adjusted_consumption))
+                elif columns[index - 1] == 'diesel':
+                    scaled_diesel = float(cell) * (adjusted_consumption + adjusted_solar)
+                    datasets[index - 1]['list'].append(_str_(scaled_diesel))
                 else:
-                    datasets[index - 1]['list'].append(row[index])
+                    datasets[index - 1]['list'].append(cell)
     for i in range(len(datasets)):
         datasets[i]['data'] = ', '.join(datasets[i]['list'])
     return labels, datasets
 
 
-def csv_based_demo(request, solar_max=1000):
+def csv_based_demo(request, solar_max=15000):
     labels, datasets = _simple_csv_loader_(['solar', 'grid', 'consumption', 'diesel'], 1, 3, int(solar_max))
     context = {
         'labels': labels,

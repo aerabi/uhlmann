@@ -24,7 +24,7 @@
                 {
                     label: '{{ data.name }}',
                     data: [{{ data.data }}],
-                    fill: false,
+                    fill: {% if data.name == 'diesel' %}'origin'{% else %}false{% endif %},
                     backgroundColor: '{{ data.color }}',
                     borderColor: '{{ data.color }}',
                     borderWidth: 1
@@ -33,7 +33,7 @@
                 ],
             },
             options: {
-                spanGaps: true
+                spanGaps: false
             }
         });
     </script>
