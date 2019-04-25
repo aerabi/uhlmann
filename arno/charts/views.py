@@ -6,6 +6,7 @@ import os.path
 import json
 
 from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import render
 from ftplib import FTP
 
@@ -146,3 +147,8 @@ def csv_based_demo(request, solar_max=15000):
         'datasets': datasets,
     }
     return render(request, 'charts/chart.html', context)
+
+
+def csv_based_demo_json(request, solar_max=15000):
+    _, datasets = _simple_csv_loader_(['solar', 'grid', 'consumption', 'diesel'], 1, 3, int(solar_max))
+    return JsonResponse({dataset['name']: dataset for dataset in datasets})

@@ -5,6 +5,9 @@
     <title>Uhl-Chart</title>
 </head>
 <body>
+    <center>
+        <input type="text" name="power" placeholder="15000" style="font-size: x-large" onkeyup="updateChart(this.value)">
+    </center>
     <canvas id="Chart-IR" width="400" height="100"></canvas>
     <canvas id="Chart-LNr" width="400" height="50"></canvas>
 
@@ -36,6 +39,15 @@
                 spanGaps: false
             }
         });
+
+    const updateChart = async (power) => {
+      const response = await fetch('/chart/demo/' + power + '/json/');
+      const newDatasets = await response.json();
+      chartIR.data.datasets.forEach((dataset) => {
+          dataset.data = eval('[' + newDatasets[dataset.label].data + ']');
+      });
+      chartIR.update();
+    }
     </script>
 </body>
 </html>
