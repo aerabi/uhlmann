@@ -26,13 +26,13 @@ def _cache_file_(filename):
 
 def _color_(name):
     colors = {'solar': 'yellow', 'diesel': 'black', 'grid': 'red', 'consumption': 'green', 'export': 'green'}
-    for substring in name.lower().strip().split(' '):
+    for substring in sorted(name.lower().strip().split(' ')):
         if substring in colors:
             return colors[substring]
     return 'red'
 
 
-def _load_data_(filename, quarterly=False, multiplier=60):
+def _load_data_(filename, quarterly=False, multiplier=60, remove_zeros=False):
     datasets = {
         'time': {
             'name': 'time',
@@ -69,7 +69,11 @@ def _load_data_(filename, quarterly=False, multiplier=60):
                     continue
                 for i in range(len(row) - 1):
                     key = keys[i]
-                    scaled_data_point = str(float(row[i]) * multiplier * multipliers[key]) if i > 0 else row[i]
+                    if i > 0:
+                        val = float(row[i]) * multiplier * multipliers[key]
+                        scaled_data_point = str(val) if val != 0 or not remove_zeros else ''
+                    else:
+                        scaled_data_point = row[i]
                     datasets[key]['list'].append(scaled_data_point)
     for key in datasets:
         datasets[key]['data'] = ', '.join(datasets[key]['list'])
@@ -79,7 +83,7 @@ def _load_data_(filename, quarterly=False, multiplier=60):
 def chart(request, filename):
     filename = '%s.CSV' % filename
     _cache_file_(filename)
-    datasets = _load_data_(filename)
+    datasets = _load_data_(filename, multiplier=1)
     context = {
         'labels': datasets[0]['list'],
         'datasets': datasets[1:],
@@ -161,7 +165,7 @@ def csv_based_demo(request, solar_max=15000):
         'labels': labels,
         'datasets': datasets,
     }
-    return render(request, 'charts/chart.html', context)
+    return render(request, 'charts/demo.html', context)
 
 
 def csv_based_demo_json(request, solar_max=15000):
