@@ -28,15 +28,18 @@
                     label: '{{ data.name }}',
                     data: [{{ data.data }}],
                     fill: {% if data.name == 'diesel' %}'origin'{% else %}false{% endif %},
-                    backgroundColor: '{{ data.color }}',
+                    backgroundColor: {% if data.name != 'diesel' %}'{{ data.color }}'{% else %}'rgba(0,0,0,.5)'{% endif %},
                     borderColor: '{{ data.color }}',
-                    borderWidth: 1
+                    borderWidth: 2
                 },
                 {% endfor %}
                 ],
             },
             options: {
-                spanGaps: false
+                spanGaps: false,
+                elements: {
+                    point: { radius: 0 }
+                },
             }
         });
 
