@@ -5,6 +5,8 @@ import csv
 import os.path
 import json
 
+from collections import defaultdict
+
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -23,42 +25,55 @@ def _cache_file_(filename):
 
 
 def _color_(name):
-    colors = {'solar': 'yellow', 'diesel': 'black', 'grid': 'red', 'consumption': 'green'}
-    if name in colors:
-        return colors[name]
+    colors = {'solar': 'yellow', 'diesel': 'black', 'grid': 'red', 'consumption': 'green', 'export': 'green'}
+    for substring in name.lower().strip().split(' '):
+        if substring in colors:
+            return colors[substring]
     return 'red'
 
 
 def _load_data_(filename, quarterly=False, multiplier=60):
-    datasets = []
+    datasets = {
+        'time': {
+            'name': 'time',
+            'data': '',
+            'list': [],
+            'color': 'black'
+        }
+    }
     keys = []
-    colors = {'solar': 'yellow', 'diesel': 'black', 'analog': 'orange'}
-    with open(filename) as f:
-        for line in f:
-            if line[0] == '/':
-                new_keys = [key.strip() for key in line[1:].strip().split(';')]
-                for key in new_keys[:-1]:
-                    if key in keys:
+    multipliers = defaultdict(float)
+    with open(filename, newline='') as f:
+        csv_reader = csv.reader(f, delimiter=';', quotechar='"')
+        for row in csv_reader:
+            # new key definitions
+            if row[0][0] == '/':
+                keys = ['time']
+                for i in range(1, len(row) - 1):
+                    if i % 2 == 0:
                         continue
+                    key = row[i]
+                    value = float(row[i + 1])
                     keys.append(key)
-                    simple_key = key.strip().split(' ')[0].lower()
-                    dataset = {
-                        'name': key,
-                        'data': '',
-                        'list': [],
-                        'color': colors[simple_key] if simple_key in colors else 'red'
-                    }
-                    datasets.append(dataset)
+                    if key not in multipliers:
+                        dataset = {
+                            'name': key,
+                            'data': '',
+                            'list': [],
+                            'color': _color_(key)
+                        }
+                        datasets[key] = dataset
+                    multipliers[key] = value
             else:
-                data = line.strip().split(';')
-                if quarterly and int(data[0][-2:]) % 15 != 0:
+                if quarterly and int(row[0][-2:]) % 15 != 0:
                     continue
-                for i in range(len(data) - 1):
-                    scaled_data_point = str(float(data[i]) * multiplier) if i > 0 else data[i]
-                    datasets[i % len(datasets)]['list'].append(scaled_data_point)
-    for i in range(len(datasets)):
-        datasets[i]['data'] = ', '.join(datasets[i]['list'])
-    return datasets
+                for i in range(len(row) - 1):
+                    key = keys[i]
+                    scaled_data_point = str(float(row[i]) * multiplier * multipliers[key]) if i > 0 else row[i]
+                    datasets[key]['list'].append(scaled_data_point)
+    for key in datasets:
+        datasets[key]['data'] = ', '.join(datasets[key]['list'])
+    return [datasets['time']] + [v for k, v in datasets.items() if k != 'time']
 
 
 def chart(request, filename):
