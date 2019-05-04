@@ -37,7 +37,7 @@ def _color_(name):
     return 'red'
 
 
-def _load_data_(filename, quarterly=False, multiplier=60, remove_zeros=False, acceptable_keys=None):
+def _load_data_(filename, quarterly=True, multiplier=60, remove_zeros=False, acceptable_keys=None, group=1):
     acceptable_keys = acceptable_keys or ['solar in', 'solar export', 'load']
     datasets = {
         'time': {
@@ -49,6 +49,7 @@ def _load_data_(filename, quarterly=False, multiplier=60, remove_zeros=False, ac
     }
     keys = []
     multipliers = defaultdict(float)
+    grouped_datapoints = defaultdict(float)
     with open(filename, newline='') as f:
         csv_reader = csv.reader(f, delimiter=';', quotechar='"')
         for row in csv_reader:
@@ -71,28 +72,40 @@ def _load_data_(filename, quarterly=False, multiplier=60, remove_zeros=False, ac
                         datasets[key] = dataset
                     multipliers[key] = value
             else:
-                if quarterly and int(row[0][-2:]) % 15 != 0:
-                    continue
                 for i in range(len(row) - 1):
                     key = keys[i]
                     if i > 0:
                         export_multiplier = -1.0 if 'export' in key.lower() else 1.0
                         val = float(row[i]) * multiplier * export_multiplier  # * multipliers[key]
                         scaled_data_point = str(val) if val != 0 or not remove_zeros else ''
+                        if quarterly:
+                            grouped_datapoints[key] += val / group
                     else:
                         scaled_data_point = row[i]
-                    datasets[key]['list'].append(scaled_data_point)
+                        if quarterly:
+                            grouped_datapoints[key] = scaled_data_point
+                    if quarterly:
+                        if int(row[0][-2:]) % group == 0:
+                            datasets[key]['list'].append(str(grouped_datapoints[key]))
+                            if i == len(row) - 2:
+                                grouped_datapoints = defaultdict(float)
+                    else:
+                        datasets[key]['list'].append(scaled_data_point)
     for key in datasets:
         datasets[key]['data'] = ', '.join(datasets[key]['list'])
     return [datasets['time']] + [v for k, v in datasets.items() if k.lower() in acceptable_keys]
 
 
-def chart(request, filename):
+def chart(request, filename, group=1):
+    group = int(group)
+    if 60 % group != 0:
+        return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>Invalid group parameter')
     filename = '%s.CSV' % filename
     _cache_file_(filename)
     if not os.path.exists(filename):
+        # todo make a proper 404 page
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>No log found for this day')
-    datasets = _load_data_(filename, multiplier=1)
+    datasets = _load_data_(filename, multiplier=1, quarterly=True, group=group)
     context = {
         'labels': datasets[0]['list'],
         'datasets': datasets[1:],
