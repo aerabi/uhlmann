@@ -102,6 +102,7 @@ def chart(request, filename, group=1):
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>Invalid group parameter')
     filename = '%s.CSV' % filename
     _cache_file_(filename)
+    available_days = sorted([f[:-4] for f in os.listdir('.') if f[:2] == '05' and f[-4:] == '.CSV'])
     if not os.path.exists(filename):
         # todo make a proper 404 page
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>No log found for this day')
@@ -109,6 +110,10 @@ def chart(request, filename, group=1):
     context = {
         'labels': datasets[0]['list'],
         'datasets': datasets[1:],
+        'days': available_days,
+        'today': filename[:-4],
+        'group': group,
+        'groups': [1, 2, 3, 5, 10, 15, 30, 60]
     }
     return render(request, 'charts/chart.html', context)
 

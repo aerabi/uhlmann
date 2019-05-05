@@ -3,10 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <title>Uhl-Chart</title>
+    <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
 </head>
+<style>
+    @ font-face {
+        font-family: "LM Mono Caps 10";
+        src: url ("http://aerabi.com/style/lmmonocaps10-regular.otf");
+    }
+
+    body {
+        font-family: 'LM Mono Caps 10', monospace;
+        font-size: 14pt;
+    }
+
+    a {
+        text-decoration: none;
+    }
+</style>
 <body>
     <canvas id="Chart-IR" width="400" height="100"></canvas>
     <canvas id="Chart-LNr" width="400" height="50"></canvas>
+    <center>
+        Date:
+        {% for day in days %}
+            {% if day == today %}
+                <b>{{ day|slice:"-2:" }}/{{ day|slice:":2" }}</b>
+            {% else %}
+                <a href="/chart/{{ day }}/group/{{ group }}/">{{ day|slice:"-2:" }}/{{ day|slice:":2" }}</a>
+            {% endif %}
+        {% endfor %}
+    </center>
+
+    <center>
+        Resolution (minutes):
+        {% for res in groups %}
+            {% if res == group %}
+                <b>{{ res }}</b>
+            {% else %}
+                <a href="/chart/{{ today }}/group/{{ res }}/">{{ res }}</a>
+            {% endif %}
+        {% endfor %}
+    </center>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js"></script>
     <script>
