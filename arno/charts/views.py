@@ -97,7 +97,34 @@ def _load_data_(filename, quarterly=True, multiplier=60, remove_zeros=False, acc
     return [datasets['time']] + [v for k, v in datasets.items() if k.lower() in acceptable_keys]
 
 
-def chart(request, filename, group=1, export_multiplier=-1):
+def _generate_new_dataset_(datasets, name='Total', query='i1 + i3', color='blue'):
+    dataset = {
+        'name': name,
+        'data': '',
+        'list': [],
+        'color': color
+    }
+    for var_index in range(1, 20):
+        query = query.replace('i%d' % var_index, 'float(datasets[%d]["list"][i])' % var_index)
+    for i in range(len(datasets[0]['list'])):
+        new_value = eval(query)
+        dataset['list'].append(new_value)
+    dataset['data'] = ', '.join(map(str, dataset['list']))
+    datasets.append(dataset)
+    return datasets
+
+
+# query is of the following form:
+# Total|blue = i1 + i3
+def _generate_new_datasets_(datasets, queries):
+    for query in queries:
+        name_color, query_statement = query.split('=')
+        name, color = name_color.strip().split('|')
+        datasets = _generate_new_dataset_(datasets, name=name.strip(), color=color, query=query_statement)
+    return datasets
+
+
+def chart(request, filename, group=1, export_multiplier=-1, queries=None):
     group = int(group)
     if 60 % group != 0:
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>Invalid group parameter')
@@ -108,6 +135,8 @@ def chart(request, filename, group=1, export_multiplier=-1):
         # todo make a proper 404 page
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>No log found for this day')
     datasets = _load_data_(filename, multiplier=1, quarterly=True, group=group, export_mult=export_multiplier)
+    if queries is not None:
+        datasets = _generate_new_datasets_(datasets, queries.split(';'))
     context = {
         'labels': datasets[0]['list'],
         'datasets': datasets[1:],
