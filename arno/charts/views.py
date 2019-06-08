@@ -37,8 +37,7 @@ def _color_(name):
     return 'red'
 
 
-def _load_data_(filename, quarterly=True, multiplier=60, remove_zeros=False, acceptable_keys=None, group=1,
-                export_mult=-1):
+def _load_data_(filename, quarterly=True, multiplier=60, remove_zeros=False, acceptable_keys=None, group=1):
     acceptable_keys = acceptable_keys or ['solar in', 'solar export', 'load']
     datasets = {
         'time': {
@@ -76,8 +75,7 @@ def _load_data_(filename, quarterly=True, multiplier=60, remove_zeros=False, acc
                 for i in range(len(row) - 1):
                     key = keys[i]
                     if i > 0:
-                        export_multiplier = export_mult if 'export' in key.lower() else 1.0
-                        val = float(row[i]) * multiplier * export_multiplier  # * multipliers[key]
+                        val = float(row[i]) * multiplier  # * multipliers[key]
                         scaled_data_point = str(val) if val != 0 or not remove_zeros else ''
                         if quarterly:
                             grouped_datapoints[key] += val / group
@@ -124,7 +122,7 @@ def _generate_new_datasets_(datasets, queries):
     return datasets
 
 
-def chart(request, filename, group=1, export_multiplier=-1, queries=None):
+def chart(request, filename, group=1, queries=None):
     group = int(group)
     if 60 % group != 0:
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>Invalid group parameter')
@@ -134,7 +132,7 @@ def chart(request, filename, group=1, export_multiplier=-1, queries=None):
     if not os.path.exists(filename):
         # todo make a proper 404 page
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>No log found for this day')
-    datasets = _load_data_(filename, multiplier=1, quarterly=True, group=group, export_mult=export_multiplier)
+    datasets = _load_data_(filename, multiplier=1, quarterly=True, group=group)
     if queries is not None:
         datasets = _generate_new_datasets_(datasets, queries.split(';'))
     context = {
@@ -146,10 +144,6 @@ def chart(request, filename, group=1, export_multiplier=-1, queries=None):
         'groups': [1, 2, 3, 5, 10, 15, 30, 60]
     }
     return render(request, 'charts/chart.html', context)
-
-
-def chart_positive(request, filename, group=1):
-    return chart(request, filename=filename, group=group, export_multiplier=1)
 
 
 def _load_solar_data_(labels, solar_max=1000):
