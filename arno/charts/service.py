@@ -102,8 +102,8 @@ def _generate_new_dataset_(datasets, name='Total', query='i1 + i3', color='blue'
         query = query.replace('i%d' % var_index, 'float(datasets[%d]["list"][i])' % var_index)
     for i in range(len(datasets[0]['list'])):
         new_value = eval(query)
-        dataset['list'].append(new_value)
-    dataset['data'] = ', '.join(map(str, dataset['list']))
+        dataset['list'].append(str(new_value))
+    dataset['data'] = ', '.join(dataset['list'])
     datasets.append(dataset)
     return datasets
 
