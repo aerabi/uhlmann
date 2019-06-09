@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 
-from .service import generate_new_datasets
+from .service import generate_new_datasets, group_datasets
 
 
 class ServiceTest(TestCase):
@@ -31,3 +31,15 @@ class ServiceTest(TestCase):
         self.assertEqual(updated_datsets[2]['list'][0], '20.0')
         self.assertEqual(updated_datsets[3]['name'], 'Export')
         self.assertEqual(updated_datsets[3]['list'][0], '-10.0')
+
+    def test_group_datasets_by_2(self):
+        datasets_grouped_by_2 = group_datasets(datasets=self.datasets, by=2)
+        self.assertEqual(len(self.datasets), len(datasets_grouped_by_2))
+        self.assertEqual(datasets_grouped_by_2[0]['list'], ['0020', '0040', '0100'])
+        self.assertEqual(datasets_grouped_by_2[1]['list'], ['15.0', '35.0', '55.0'])
+
+    def test_group_datasets_by_3(self):
+        datasets_grouped_by_3 = group_datasets(datasets=self.datasets, by=3)
+        self.assertEqual(len(self.datasets), len(datasets_grouped_by_3))
+        self.assertEqual(datasets_grouped_by_3[0]['list'], ['0030', '0100'])
+        self.assertEqual(datasets_grouped_by_3[1]['list'], ['20.0', '50.0'])

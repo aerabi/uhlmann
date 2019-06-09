@@ -7,7 +7,7 @@ from django.http import JsonResponse, HttpResponseNotFound
 from django.shortcuts import render
 
 
-from .service import cache_file, load_data, generate_new_datasets, load_solar_data, simple_csv_loader
+from .service import cache_file, load_data, generate_new_datasets, load_solar_data, simple_csv_loader, group_datasets
 
 
 def chart(request, filename, group=1, queries=None):
@@ -20,7 +20,9 @@ def chart(request, filename, group=1, queries=None):
     if not os.path.exists(filename):
         # todo make a proper 404 page
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>No log found for this day')
-    datasets = load_data(filename, multiplier=1, quarterly=True, group=group)
+    datasets = load_data(filename, multiplier=1, quarterly=False, group=1)
+    if group != 1:
+        datasets = group_datasets(datasets, by=group)
     if queries is not None:
         datasets = generate_new_datasets(datasets, queries.split(';'))
     context = {

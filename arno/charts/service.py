@@ -118,6 +118,27 @@ def generate_new_datasets(datasets, queries):
     return datasets
 
 
+def group_datasets(datasets, by=2):
+    if len(datasets) == 0:
+        return datasets
+    # deal with time
+    datasets[0]['list'] = [datasets[0]['list'][i] for i in range(len(datasets[0]['list'])) if (i + 1) % by == 0]
+    datasets[0]['data'] = ', '.join(datasets[0]['list'])
+    # deal with the rest
+    for index in range(1, len(datasets)):
+        grouped_list = list()
+        group = list()
+        for i in range(len(datasets[index]['list'])):
+            group.append(float(datasets[index]['list'][i]))
+            if (i + 1) % by == 0:
+                value = sum(group) / len(group)
+                grouped_list.append(str(value))
+                group = list()
+        datasets[index]['list'] = grouped_list
+        datasets[index]['data'] = ', '.join(datasets[index]['list'])
+    return datasets
+
+
 def load_solar_data(labels, solar_max=1000):
     with open('solar.json', 'r') as json_file:
         solar_data_map = json.load(json_file)
