@@ -14,6 +14,7 @@ from .service import load_solar_data
 from .service import simple_csv_loader
 from .service import group_datasets
 from .service import date_scroll_generator
+from .service import relable_datasets
 
 
 def chart(request, filename, group=1, queries=None):
@@ -33,6 +34,7 @@ def chart(request, filename, group=1, queries=None):
         datasets = group_datasets(datasets, by=group)
     if queries is not None:
         datasets = generate_new_datasets(datasets, queries.split(';'))
+    datasets = relable_datasets(datasets)
     context = {
         'labels': datasets[0]['list'],
         'datasets': datasets[1:],

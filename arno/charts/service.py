@@ -118,6 +118,12 @@ def generate_new_datasets(datasets, queries):
     return datasets
 
 
+def relable_datasets(datasets):
+    for i in range(1, len(datasets)):
+        datasets[i]['name'] = 'i%d: %s' % (i, datasets[i]['name'])
+    return datasets
+
+
 def group_datasets(datasets, by=2):
     if len(datasets) == 0:
         return datasets

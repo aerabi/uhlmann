@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 
-from .service import generate_new_datasets, group_datasets, date_scroll_generator
+from .service import generate_new_datasets, group_datasets, date_scroll_generator, relable_datasets
 
 
 class ServiceTest(TestCase):
@@ -43,6 +43,11 @@ class ServiceTest(TestCase):
         self.assertEqual(len(self.datasets), len(datasets_grouped_by_3))
         self.assertEqual(datasets_grouped_by_3[0]['list'], ['0030', '0100'])
         self.assertEqual(datasets_grouped_by_3[1]['list'], ['20.0', '50.0'])
+
+    def test_relable_datasets(self):
+        labled_datasets = relable_datasets(self.datasets)
+        self.assertEqual(labled_datasets[0]['name'], 'time')
+        self.assertEqual(labled_datasets[1]['name'], 'i1: Load')
 
     def test_date_scroll_generator(self):
         dates = ['0522', '0523', '0524', '0525', '0526', '0527', '0528', '0608']
