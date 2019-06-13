@@ -7,7 +7,13 @@ from django.http import JsonResponse, HttpResponseNotFound
 from django.shortcuts import render
 
 
-from .service import cache_file, load_data, generate_new_datasets, load_solar_data, simple_csv_loader, group_datasets
+from .service import cache_file
+from .service import load_data
+from .service import generate_new_datasets
+from .service import load_solar_data
+from .service import simple_csv_loader
+from .service import group_datasets
+from .service import date_scroll_generator
 
 
 def chart(request, filename, group=1, queries=None):
@@ -16,7 +22,9 @@ def chart(request, filename, group=1, queries=None):
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>Invalid group parameter')
     filename = '%s.CSV' % filename
     cache_file(filename)
-    available_days = sorted([f[:-4] for f in os.listdir('.') if f[:2] == '05' and f[-4:] == '.CSV'])
+    available_days = sorted([f[:-4] for f in os.listdir('.') if f[:2] in ['05', '06'] and f[-4:] == '.CSV'])
+    today = filename[:-4]
+    days, prev_day, next_day = date_scroll_generator(available_days, today)
     if not os.path.exists(filename):
         # todo make a proper 404 page
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>No log found for this day')
@@ -28,8 +36,10 @@ def chart(request, filename, group=1, queries=None):
     context = {
         'labels': datasets[0]['list'],
         'datasets': datasets[1:],
-        'days': available_days,
-        'today': filename[:-4],
+        'days': days,
+        'today': today,
+        'prev_day': prev_day,
+        'next_day': next_day,
         'group': group,
         'groups': [1, 2, 3, 5, 10, 15, 30, 60]
     }

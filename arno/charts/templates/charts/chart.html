@@ -25,6 +25,9 @@
     <canvas id="Chart-LNr" width="400" height="50"></canvas>
     <center>
         Date:
+        {% if prev_day %}
+            <a href="/chart/{{ prev_day }}/group/{{ group }}/">Previous</a> ...
+        {% endif %}
         {% for day in days %}
             {% if day == today %}
                 <b>{{ day|slice:"-2:" }}/{{ day|slice:":2" }}</b>
@@ -32,6 +35,9 @@
                 <a href="/chart/{{ day }}/group/{{ group }}/">{{ day|slice:"-2:" }}/{{ day|slice:":2" }}</a>
             {% endif %}
         {% endfor %}
+        {% if next_day %}
+            ... <a href="/chart/{{ next_day }}/group/{{ group }}/">Next</a>
+        {% endif %}
     </center>
 
     <center>

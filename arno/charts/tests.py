@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 
-from .service import generate_new_datasets, group_datasets
+from .service import generate_new_datasets, group_datasets, date_scroll_generator
 
 
 class ServiceTest(TestCase):
@@ -43,3 +43,12 @@ class ServiceTest(TestCase):
         self.assertEqual(len(self.datasets), len(datasets_grouped_by_3))
         self.assertEqual(datasets_grouped_by_3[0]['list'], ['0030', '0100'])
         self.assertEqual(datasets_grouped_by_3[1]['list'], ['20.0', '50.0'])
+
+    def test_date_scroll_generator(self):
+        dates = ['0522', '0523', '0524', '0525', '0526', '0527', '0528', '0608']
+        self.assertEqual(date_scroll_generator(dates, '0522'), (['0522', '0523', '0524'], None, '0523'))
+        self.assertEqual(date_scroll_generator(dates, '0523'), (['0522', '0523', '0524', '0525'], '0522', '0524'))
+        self.assertEqual(date_scroll_generator(dates, '0524'),
+                         (['0522', '0523', '0524', '0525', '0526'], '0523', '0525'))
+        self.assertEqual(date_scroll_generator(dates, '0528'), (['0526', '0527', '0528', '0608'], '0527', '0608'))
+        self.assertEqual(date_scroll_generator(dates, '0608'), (['0527', '0528', '0608'], '0528', None))

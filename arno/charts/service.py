@@ -184,3 +184,12 @@ def simple_csv_loader(columns, solar_index, consumption_index, solar_max=15000):
     for i in range(len(datasets)):
         datasets[i]['data'] = ', '.join(datasets[i]['list'])
     return labels, datasets
+
+
+def date_scroll_generator(dates, cursor):
+    index = dates.index(cursor)
+    lower_limit = max(0, index - 2)
+    upper_limit = min(len(dates), index + 2) + 1
+    previous = dates[index - 1] if index > 0 else None
+    next_one = dates[index + 1] if index < len(dates) - 1 else None
+    return dates[lower_limit:upper_limit], previous, next_one
