@@ -11,13 +11,17 @@
         src: url ("http://aerabi.com/style/lmmonocaps10-regular.otf");
     }
 
-    body {
+    body, button {
         font-family: 'LM Mono Caps 10', monospace;
         font-size: 14pt;
     }
 
     a {
         text-decoration: none;
+    }
+
+    textarea {
+        margin-bottom: -10px;
     }
 </style>
 <body>
@@ -49,6 +53,13 @@
                 <a href="/chart/{{ today }}/group/{{ res }}/">{{ res }}</a>
             {% endif %}
         {% endfor %}
+    </center>
+
+    <center>
+        <br><label for="formulae">Formulae:</label>
+        <textarea name="formulae" id="formulae" rows="5" cols="40" placeholder="Total|black = i1 + i2;
+Min|rgb(102,51,153) = min(i2,  i3)">{% if formulae %}{{ formulae }}{% endif %}</textarea>
+        <button onclick="withFormulae()">Draw!</button>
     </center>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js"></script>
@@ -90,6 +101,11 @@
           dataset.data = eval('[' + newDatasets[dataset.label].data + ']');
       });
       chartIR.update();
+    }
+
+    function withFormulae() {
+        var formulae = document.getElementById("formulae").value;
+        window.location.href = '/chart/{{ today }}/group/{{ group }}/' + formulae;
     }
     </script>
 </body>

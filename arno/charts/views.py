@@ -41,7 +41,8 @@ def chart(request, filename, group=1, queries=None):
         'prev_day': prev_day,
         'next_day': next_day,
         'group': group,
-        'groups': [1, 2, 3, 5, 10, 15, 30, 60]
+        'groups': [1, 2, 3, 5, 10, 15, 30, 60],
+        'formulae': queries.replace(';', ';\n') if queries is not None else None
     }
     return render(request, 'charts/chart.html', context)
 
