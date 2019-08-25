@@ -48,44 +48,56 @@ def load_data(filename, quarterly=True, multiplier=60, remove_zeros=False, accep
     grouped_datapoints = defaultdict(float)
     with open(filename, newline='') as f:
         csv_reader = csv.reader(f, delimiter=';', quotechar='"')
+        first_row = True
         for row in csv_reader:
-            # new key definitions
-            if row[0][0] == '/':
-                keys = ['time']
-                for i in range(1, len(row) - 1):
-                    if i % 2 == 0:
+            try:
+                if len(row) == 0:
+                    continue
+                # new key definitions
+                if row[0][0] == '/':
+                    if not first_row:
                         continue
-                    key = row[i]
-                    value = float(row[i + 1])
-                    keys.append(key)
-                    if key not in multipliers:
-                        dataset = {
-                            'name': key,
-                            'data': '',
-                            'list': [],
-                            'color': _color_(key)
-                        }
-                        datasets[key] = dataset
-                    multipliers[key] = value
-            else:
-                for i in range(len(row) - 1):
-                    key = keys[i]
-                    if i > 0:
-                        val = float(row[i]) * multiplier  # * multipliers[key]
-                        scaled_data_point = str(val) if val != 0 or not remove_zeros else ''
+                    keys = ['time']
+                    for i in range(1, len(row) - 1):
+                        if i % 2 == 0:
+                            continue
+                        key = row[i]
+                        value = float(row[i + 1])
+                        keys.append(key)
+                        if key not in multipliers:
+                            dataset = {
+                                'name': key,
+                                'data': '',
+                                'list': [],
+                                'color': _color_(key)
+                            }
+                            datasets[key] = dataset
+                        multipliers[key] = value
+                    first_row = False
+                else:
+                    if len(row) - 1 != len(keys):
+                        continue
+                    for i in range(len(row) - 1):
+                        key = keys[i]
+                        if i > 0:
+                            row_value = row[i] if len(row[i]) > 0 else '0'
+                            val = float(row_value) * multiplier  # * multipliers[key]
+                            scaled_data_point = str(val) if val != 0 or not remove_zeros else ''
+                            if quarterly:
+                                grouped_datapoints[key] += val / group
+                        else:
+                            scaled_data_point = row[i]
+                            if quarterly:
+                                grouped_datapoints[key] = scaled_data_point
                         if quarterly:
-                            grouped_datapoints[key] += val / group
-                    else:
-                        scaled_data_point = row[i]
-                        if quarterly:
-                            grouped_datapoints[key] = scaled_data_point
-                    if quarterly:
-                        if int(row[0][-2:]) % group == 0:
-                            datasets[key]['list'].append(str(grouped_datapoints[key]))
-                            if i == len(row) - 2:
-                                grouped_datapoints = defaultdict(float)
-                    else:
-                        datasets[key]['list'].append(scaled_data_point)
+                            if int(row[0][-2:]) % group == 0:
+                                datasets[key]['list'].append(str(grouped_datapoints[key]))
+                                if i == len(row) - 2:
+                                    grouped_datapoints = defaultdict(float)
+                        else:
+                            datasets[key]['list'].append(scaled_data_point)
+            except:
+                continue
     for key in datasets:
         datasets[key]['data'] = ', '.join(datasets[key]['list'])
     return [datasets['time']] + [v for k, v in datasets.items() if k.lower() in acceptable_keys]

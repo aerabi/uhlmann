@@ -23,7 +23,8 @@ def chart(request, filename, group=1, queries=None):
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>Invalid group parameter')
     filename = '%s.CSV' % filename
     cache_file(filename)
-    available_days = sorted([f[:-4] for f in os.listdir('.') if f[:2] in ['05', '06'] and f[-4:] == '.CSV'])
+    months = ['%02d' % i for i in range(1, 13)]
+    available_days = sorted([f[:-4] for f in os.listdir('.') if f[-4:] == '.CSV' and f[:2] in months])
     today = filename[:-4]
     days, prev_day, next_day = date_scroll_generator(available_days, today)
     if not os.path.exists(filename):
