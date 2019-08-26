@@ -4,8 +4,6 @@ import os.path
 
 from collections import defaultdict
 
-from django.conf import settings
-
 from ftplib import FTP
 
 
@@ -79,6 +77,7 @@ def load_data(filename, quarterly=True, multiplier=60, remove_zeros=False, accep
                 else:
                     if len(row) - 1 != len(keys):
                         continue
+                    duplicated_key = len(datasets['time']['list']) > 0 and row[0] == datasets['time']['list'][-1]
                     for i in range(len(row) - 1):
                         key = keys[i]
                         if i > 0:
@@ -97,7 +96,10 @@ def load_data(filename, quarterly=True, multiplier=60, remove_zeros=False, accep
                                 if i == len(row) - 2:
                                     grouped_datapoints = defaultdict(float)
                         else:
-                            datasets[key]['list'].append(scaled_data_point)
+                            if duplicated_key:
+                                datasets[key]['list'][-1] = scaled_data_point
+                            else:
+                                datasets[key]['list'].append(scaled_data_point)
             except:
                 continue
     for key in datasets:
