@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FTP Server Form</title>
+</head>
+<style>
+    body {
+        font-size: x-large;
+    }
+    input {
+        font-size: x-large;
+    }
+</style>
+<body>
+<center>
+    <form action="/forms/ftp/submit/" method="post">
+        URL:<br>
+        <input type="text" name="url" placeholder="ftp://...">
+        <br>
+        Username:<br>
+        <input type="text" name="username" placeholder="arno">
+        <br>
+        Password:<br>
+        <input type="password" name="password">
+        <br><br>
+        <input type="submit" value="Submit">
+    </form>
+</center>
+</body>
+</html>

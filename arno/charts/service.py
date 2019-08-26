@@ -12,8 +12,10 @@ from ftplib import FTP
 def cache_file(filename, hard_reload=True):
     if os.path.exists(filename) and not hard_reload:
         return
-    ftp = FTP(settings.FTP_URL)
-    ftp.login(settings.FTP_USR, settings.FTP_PWD)
+    with open('ftp_setting.json') as input_file:
+        ftp_settings = json.load(input_file)
+    ftp = FTP(ftp_settings['url'])
+    ftp.login(ftp_settings['username'], ftp_settings['password'])
     localfile = open(filename, 'wb')
     try:
         ftp.retrbinary('RETR ' + filename, localfile.write, 1024)
