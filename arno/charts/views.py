@@ -50,6 +50,23 @@ def chart(request, filename, group=1, queries=None):
     return render(request, 'charts/chart.html', context)
 
 
+def get_data(request, filename, group=1, queries=None):
+    group = int(group)
+    if 60 % group != 0:
+        return JsonResponse({'message': 'group must divide 60'}, status=400)
+    filename = '%s.CSV' % filename
+    cache_file(filename)
+    if not os.path.exists(filename):
+        return JsonResponse({'message': 'day not found'}, status=404)
+    datasets = load_data(filename, multiplier=1, quarterly=False, group=1)
+    if group != 1:
+        datasets = group_datasets(datasets, by=group)
+    if queries is not None:
+        datasets = generate_new_datasets(datasets, queries.split(';'))
+    datasets = relable_datasets(datasets)
+    return JsonResponse(datasets, safe=False)
+
+
 def demo(request, solar_max=1000):
     all_datasets = load_data('0225.CSV', quarterly=True)
     labels = all_datasets[0]['list']

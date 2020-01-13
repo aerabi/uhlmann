@@ -3,6 +3,9 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
+    url(r'^api/(?P<filename>[0-9]+)/$', views.get_data, name='get_data'),
+    url(r'^api/(?P<filename>[0-9]+)/group/(?P<group>[0-9]+)/$', views.get_data, name='get_data'),
+    url(r'^api/(?P<filename>[0-9]+)/group/(?P<group>[0-9]+)/(?P<queries>.*)/$', views.get_data, name='get_data'),
     url(r'^(?P<filename>[0-9]+)/$', views.chart, name='chart'),
     url(r'^(?P<filename>[0-9]+)/group/(?P<group>[0-9]+)/$', views.chart, name='chart'),
     url(r'^(?P<filename>[0-9]+)/group/(?P<group>[0-9]+)/(?P<queries>.*)/$', views.chart, name='chart'),
