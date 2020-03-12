@@ -148,3 +148,10 @@ tags
 ### SVN template
 .svn/
 
+# SQLite
+*.sqlite3
+
+# Project-specific
+arno/static/
+arno/ftp_setting.json
+
