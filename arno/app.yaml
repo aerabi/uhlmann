@@ -1,0 +1,18 @@
+runtime: python37
+
+handlers:
+- url: /
+  static_files: static/solar-chart/index.html
+  upload: static/solar-chart/index.html
+- url: /admin/(.*)
+  script: auto
+- url: /chart/(.*)
+  script: auto
+- url: /forms/(.*)
+  script: auto
+- url: /static/admin/(.*)
+  static_files: static/django/admin/\1
+  upload: static/django/admin/(.*)
+- url: /(.*)
+  static_files: static/solar-chart/\1
+  upload: static/solar-chart/(.*)
