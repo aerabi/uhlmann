@@ -7,20 +7,24 @@ from collections import defaultdict
 from ftplib import FTP
 
 
-def cache_file(filename, hard_reload=True):
+def cache_file(filename, hard_reload=True, name=None):
+    from .models import FtpCredential
     if os.path.exists(filename) and not hard_reload:
         return
-    with open('ftp_setting.json') as input_file:
-        ftp_settings = json.load(input_file)
-    ftp = FTP(ftp_settings['url'])
-    ftp.login(ftp_settings['username'], ftp_settings['password'])
+    if name is not None:
+        ftp_credential = FtpCredential.objects.get(name=name)
+    else:
+        ftp_credential = FtpCredential.objects.all()[0]
+    ftp = FTP(ftp_credential.host)
+    ftp.login(ftp_credential.user, ftp_credential.pwd)
     localfile = open(filename, 'wb')
     try:
         ftp.retrbinary('RETR ' + filename, localfile.write, 1024)
         localfile.close()
-    except:
+    except Exception as e:
         localfile.close()
         os.remove(filename)
+        raise e
     finally:
         ftp.quit()
 

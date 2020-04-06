@@ -17,12 +17,12 @@ from .service import date_scroll_generator
 from .service import relable_datasets
 
 
-def chart(request, filename, group=1, queries=None):
+def chart(request, filename, group=1, queries=None, name=None):
     group = int(group)
     if 60 % group != 0:
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>Invalid group parameter')
     filename = '%s.CSV' % filename
-    cache_file(filename)
+    cache_file(filename, name=name)
     months = ['%02d' % i for i in range(1, 13)]
     available_days = sorted([f[:-4] for f in os.listdir('.') if f[-4:] == '.CSV' and f[:2] in months])
     today = filename[:-4]
