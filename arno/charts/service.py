@@ -29,6 +29,23 @@ def cache_file(filename, hard_reload=True, name=None):
         ftp.quit()
 
 
+def load_rows_from_ftp(filename, ftp_name):
+    from .models import FtpCredential
+
+    if ftp_name is not None:
+        ftp_credential = FtpCredential.objects.get(name=ftp_name)
+    else:
+        ftp_credential = FtpCredential.objects.all()[0]
+    ftp = FTP(ftp_credential.host)
+    ftp.login(ftp_credential.user, ftp_credential.pwd)
+    try:
+        lines = []
+        ftp.retrlines('RETR ' + filename, lines.append)
+        return [line.split(';') for line in lines]
+    finally:
+        ftp.quit()
+
+
 def _color_(name):
     colors = {'solar': 'yellow', 'diesel': 'black', 'grid': 'red', 'consumption': 'green', 'export': 'green'}
     for substring in sorted(name.lower().strip().split(' ')):
@@ -37,7 +54,7 @@ def _color_(name):
     return 'red'
 
 
-def load_data(filename, quarterly=True, multiplier=60, remove_zeros=False, acceptable_keys=None, group=1):
+def load_data(filename, quarterly=True, multiplier=60, remove_zeros=False, acceptable_keys=None, group=1, rows=None):
     acceptable_keys = acceptable_keys or ['solar in', 'solar export', 'load']
     datasets = {
         'time': {
@@ -50,62 +67,65 @@ def load_data(filename, quarterly=True, multiplier=60, remove_zeros=False, accep
     keys = []
     multipliers = defaultdict(float)
     grouped_datapoints = defaultdict(float)
-    with open(filename, newline='') as f:
-        csv_reader = csv.reader(f, delimiter=';', quotechar='"')
-        first_row = True
-        for row in csv_reader:
-            try:
-                if len(row) == 0:
-                    continue
-                # new key definitions
-                if row[0][0] == '/':
-                    if not first_row:
-                        continue
-                    keys = ['time']
-                    for i in range(1, len(row) - 1):
-                        if i % 2 == 0:
-                            continue
-                        key = row[i]
-                        value = float(row[i + 1])
-                        keys.append(key)
-                        if key not in multipliers:
-                            dataset = {
-                                'name': key,
-                                'data': '',
-                                'list': [],
-                                'color': _color_(key)
-                            }
-                            datasets[key] = dataset
-                        multipliers[key] = value
-                    first_row = False
-                else:
-                    if len(row) - 1 != len(keys):
-                        continue
-                    duplicated_key = len(datasets['time']['list']) > 0 and row[0] == datasets['time']['list'][-1]
-                    for i in range(len(row) - 1):
-                        key = keys[i]
-                        if i > 0:
-                            row_value = row[i] if len(row[i]) > 0 else '0'
-                            val = float(row_value) * multiplier  # * multipliers[key]
-                            scaled_data_point = str(val) if val != 0 or not remove_zeros else ''
-                            if quarterly:
-                                grouped_datapoints[key] += val / group
-                        else:
-                            scaled_data_point = row[i]
-                            if quarterly:
-                                grouped_datapoints[key] = scaled_data_point
-                        if quarterly:
-                            if int(row[0][-2:]) % group == 0:
-                                datasets[key]['list'].append(str(grouped_datapoints[key]))
-                                if i == len(row) - 2:
-                                    grouped_datapoints = defaultdict(float)
-                        else:
-                            if duplicated_key:
-                                datasets[key]['list'][-1] = scaled_data_point
-                            else:
-                                datasets[key]['list'].append(scaled_data_point)
-            except:
+    if rows is None:
+        f = open(filename, newline='')
+        rows = csv.reader(f, delimiter=';', quotechar='"')
+
+    first_row = True
+    for row in rows:
+        try:
+            if len(row) == 0:
                 continue
+            # new key definitions
+            if row[0][0] == '/':
+                if not first_row:
+                    continue
+                keys = ['time']
+                for i in range(1, len(row) - 1):
+                    if i % 2 == 0:
+                        continue
+                    key = row[i]
+                    value = float(row[i + 1])
+                    keys.append(key)
+                    if key not in multipliers:
+                        dataset = {
+                            'name': key,
+                            'data': '',
+                            'list': [],
+                            'color': _color_(key)
+                        }
+                        datasets[key] = dataset
+                    multipliers[key] = value
+                first_row = False
+            else:
+                if len(row) - 1 != len(keys):
+                    continue
+                duplicated_key = len(datasets['time']['list']) > 0 and row[0] == datasets['time']['list'][-1]
+                for i in range(len(row) - 1):
+                    key = keys[i]
+                    if i > 0:
+                        row_value = row[i] if len(row[i]) > 0 else '0'
+                        val = float(row_value) * multiplier  # * multipliers[key]
+                        scaled_data_point = str(val) if val != 0 or not remove_zeros else ''
+                        if quarterly:
+                            grouped_datapoints[key] += val / group
+                    else:
+                        scaled_data_point = row[i]
+                        if quarterly:
+                            grouped_datapoints[key] = scaled_data_point
+                    if quarterly:
+                        if int(row[0][-2:]) % group == 0:
+                            datasets[key]['list'].append(str(grouped_datapoints[key]))
+                            if i == len(row) - 2:
+                                grouped_datapoints = defaultdict(float)
+                    else:
+                        if duplicated_key:
+                            datasets[key]['list'][-1] = scaled_data_point
+                        else:
+                            datasets[key]['list'].append(scaled_data_point)
+        except:
+            continue
+
     for key in datasets:
         datasets[key]['data'] = ', '.join(datasets[key]['list'])
     return [datasets['time']] + [v for k, v in datasets.items() if k.lower() in acceptable_keys]

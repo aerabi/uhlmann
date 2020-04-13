@@ -3,18 +3,22 @@ from __future__ import unicode_literals
 
 import os.path
 
+from dateutil import parser
 from django.http import JsonResponse, HttpResponseNotFound
 from django.shortcuts import render
 
 
 from .service import cache_file
 from .service import load_data
+from .service import load_rows_from_ftp
 from .service import generate_new_datasets
 from .service import load_solar_data
 from .service import simple_csv_loader
 from .service import group_datasets
 from .service import date_scroll_generator
 from .service import relable_datasets
+from .services.migration import migrate_ftp_file
+from .services.record import get_by_time
 
 
 def chart(request, filename, group=1, queries=None, name=None):
@@ -30,7 +34,7 @@ def chart(request, filename, group=1, queries=None, name=None):
     if not os.path.exists(filename):
         # todo make a proper 404 page
         return HttpResponseNotFound('<h2 style="font-family:\'Courier New\'"><center>No log found for this day')
-    datasets = load_data(filename, multiplier=1, quarterly=False, group=1)
+    datasets = load_data(filename, multiplier=1, quarterly=False, group=1, rows=load_rows_from_ftp(filename, name))
     if group != 1:
         datasets = group_datasets(datasets, by=group)
     if queries is not None:
@@ -100,3 +104,15 @@ def csv_based_demo(request, solar_max=15000):
 def csv_based_demo_json(request, solar_max=15000):
     _, datasets = simple_csv_loader(['solar', 'grid', 'consumption', 'diesel'], 1, 3, int(solar_max))
     return JsonResponse({dataset['name']: dataset for dataset in datasets})
+
+
+def migrate(request, filename, ftp_name, year):
+    migrated_objects = migrate_ftp_file(filename=filename, ftp_name=ftp_name, year=int(year))
+    return JsonResponse({'count': len(migrated_objects)})
+
+
+def get_records(request, starting, to):
+    _starting_ = parser.parse(starting)
+    _to_ = parser.parse(to)
+    objects = get_by_time(_starting_, _to_)
+    return JsonResponse({'count': len(objects), 'records': objects})

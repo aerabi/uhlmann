@@ -20,3 +20,10 @@ Put build files of the Angular project under
 ```bash
 $ gcloud app deploy app.yaml --project=arno-chart
 ```
+
+## Development
+
+To connect to DB:
+```bash
+$ ./cloud_sql_proxy -instances=arno-chart:europe-west3:arno-db=tcp:3306
+```
