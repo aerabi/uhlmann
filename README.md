@@ -68,6 +68,16 @@ ALLOWED_HOSTS = [
 
 (Use another editor if you're not familiar with `vim`.)
 
+### (Optional) Create a SuperUser
+
+Create a super-user to access the Django Admin:
+
+```bash
+python manage.py createsuperuser
+```
+
+And then enter username, email, and password.
+
 ### Run the Server with NoHup
 
 Run the server on IP `0.0.0.0` and port `80`:
@@ -77,6 +87,10 @@ nohup python manage.py runserver 0.0.0.0:80 &
 ```
 
 Then the Django app is running on the VPS, e.g. on [167.71.40.77/chart](http://167.71.40.77/chart).
+
+### Set the FTP Credentials
+
+With a browser, open the path `/forms/ftp`, e.g. [167.71.40.77/forms/ftp](http://167.71.40.77/forms/ftp/), and enter the FTP credentials.
 
 ## Install
 
