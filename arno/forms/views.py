@@ -1,4 +1,5 @@
 import json
+import os
 
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -17,5 +18,13 @@ def ftp_form_submit(request):
     data = {'url': url, 'username': username, 'password': password}
     with open('ftp_setting.json', 'w') as output_file:
         json.dump(data, output_file)
+    delete_old_csv_files()
     return HttpResponse('<center><p style="font-size:x-large"><br><br><br><br>'
                         'The new data has been successfully recorded')
+
+
+def delete_old_csv_files():
+    folder_path = '.'
+    for f in os.listdir(folder_path):
+        if '.csv' in f.lower():
+            os.remove(os.path.join(folder_path, f))
