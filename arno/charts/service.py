@@ -34,7 +34,7 @@ def _color_(name):
 
 
 def load_data(filename, quarterly=True, multiplier=60, remove_zeros=False, acceptable_keys=None, group=1):
-    acceptable_keys = acceptable_keys or ['solar in', 'solar export', 'load']
+    acceptable_keys = acceptable_keys or ['solar in', 'solar export', 'load', 'ac_in', 'last', 'dca', 'sonne w/m2', 'volt']
     datasets = {
         'time': {
             'name': 'time',
